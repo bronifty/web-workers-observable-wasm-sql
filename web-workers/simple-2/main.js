@@ -19,15 +19,15 @@ if (window.Worker) {
   first.addEventListener("change", () => {
     myWorker.postMessage([first.value, second.value]);
     console.log("Message posted to worker");
-    observableInput1.value = first.value;
-    observableInput2.value = second.value;
+    // observableInput1.value = first.value;
+    // observableInput2.value = second.value;
   });
 
   second.addEventListener("change", () => {
     myWorker.postMessage([first.value, second.value]);
     console.log("Message posted to worker");
-    observableInput1.value = first.value;
-    observableInput2.value = second.value;
+    // observableInput1.value = first.value;
+    // observableInput2.value = second.value;
   });
 
   // [first, second].forEach((input) => {
@@ -38,7 +38,9 @@ if (window.Worker) {
   // });
 
   myWorker.onmessage = function (e) {
-    result.textContent = e.data;
+    result.textContent = e.data.workerResult;
+    console.log(e.data.observableTotal);
+    total.textContent = e.data.observableTotal;
     console.log("Message received from worker");
   };
 } else {

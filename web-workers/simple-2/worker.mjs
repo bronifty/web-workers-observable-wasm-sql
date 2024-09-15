@@ -19,6 +19,6 @@ self.onmessage = function (e) {
   } else {
     const workerResult = "Result: " + result;
     console.log("Worker: Posting message back to main script");
-    postMessage(workerResult);
+    postMessage({ workerResult, observableTotal: observableTotal.value });
   }
 };
