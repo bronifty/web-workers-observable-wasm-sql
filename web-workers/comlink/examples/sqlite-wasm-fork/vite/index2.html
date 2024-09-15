@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SQLite WASM Todo App</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      h1,
+      h2 {
+        color: #333;
+      }
+      #todo-form {
+        margin-bottom: 20px;
+      }
+      #todo-list {
+        list-style-type: none;
+        padding: 0;
+      }
+      #todo-list li {
+        margin-bottom: 10px;
+      }
+      .completed {
+        text-decoration: line-through;
+        color: #888;
+      }
+      .delete-btn {
+        margin-left: 10px;
+        color: red;
+        cursor: pointer;
+      }
+      pre {
+        background-color: #f0f0f0;
+        padding: 10px;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>SQLite WASM Todo App</h1>
+
+    <form id="todo-form">
+      <input
+        type="text"
+        id="todo-input"
+        placeholder="Enter a new todo"
+        required
+      />
+      <button type="submit">Add Todo</button>
+    </form>
+
+    <ul id="todo-list"></ul>
+
+    <h2>Main Thread Log</h2>
+    <pre class="main"></pre>
+    <h2>Worker Log</h2>
+    <pre class="worker"></pre>
+
+    <script type="module" src="/main2.js"></script>
+  </body>
+</html>

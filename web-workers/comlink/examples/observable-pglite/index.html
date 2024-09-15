@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Management</title>
+  </head>
+  <body>
+    <form id="userForm">
+      <input type="text" id="name" placeholder="Name" required />
+      <input type="email" id="email" placeholder="Email" required />
+      <button type="submit">Add User</button>
+    </form>
+    <div id="userCount">Total Users: 0</div>
+
+    <script type="module">
+      import { UserModel } from "./UserModel.js";
+
+      const userModel = new UserModel();
+      const userForm = document.getElementById("userForm");
+      const userCountElement = document.getElementById("userCount");
+
+      userForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = document.getElementById("name").value;
+        const email = document.getElementById("email").value;
+        await userModel.addUser(name, email);
+        userForm.reset();
+      });
+
+      userModel.usersObservable.subscribe((count) => {
+        userCountElement.textContent = `Total Users: ${count}`;
+      });
+    </script>
+  </body>
+</html>
