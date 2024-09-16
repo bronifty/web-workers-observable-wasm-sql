@@ -22,7 +22,7 @@ import promiserFactory from "./jswasm/sqlite3-worker1-promiser.mjs";
 
   try {
     // Initialize the worker and get the promiser function
-    const workerPromise = await promiserFactory(promiserConfig).then((func) => {
+    const workerPromise = await promiserFactory().then((func) => {
       console.log("Worker initialized successfully.");
       return func;
     });
