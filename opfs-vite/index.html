@@ -1,4 +1,5 @@
-<!doctype html>
+<!-- web-workers-observable-wasm-sql/opfs-vite/index.html -->
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -6,11 +7,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite App</title>
   </head>
-  <body>    
+  <body>
     <h1>Main thread</h1>
-    <pre class=main></pre>
+    <pre class="main"></pre>
+
+    <h1>Add Todo</h1>
+    <form id="todo-form">
+      <input type="text" id="title" placeholder="Title" required />
+      <input type="text" id="description" placeholder="Description" required />
+      <button type="submit">Add Todo</button>
+    </form>
+
+    <h1>Todos</h1>
+    <ul id="todo-list"></ul>
+
     <h1>Worker</h1>
-    <pre class=worker></pre>
+    <pre class="worker"></pre>
     <script type="module" src="/main.js"></script>
   </body>
 </html>

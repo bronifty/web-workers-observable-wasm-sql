@@ -1,50 +1,114 @@
-// In `worker.js`.
-import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
+// web-workers-observable-wasm-sql/opfs-vite/worker.js
 
-const log = (...args) => postMessage({type: 'log', payload: args.join(' ')});
-const error = (...args) => postMessage({type: 'error', payload: args.join(' ')});
+import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
 
-const start = function (sqlite3) {
-  log('Running SQLite3 version', sqlite3.version.libVersion);
-  let db;
-  if ('opfs' in sqlite3) {
-    db = new sqlite3.oo1.OpfsDb('/mydb.sqlite3');
-    log('OPFS is available, created persisted database at', db.filename);
-  } else {
-    db = new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
-    log('OPFS is not available, created transient database', db.filename);
-  }
-  try {
-    log('Creating a table...');
-    db.exec('CREATE TABLE IF NOT EXISTS t(a,b)');
-    log('Insert some data using exec()...');
-    for (let i = 20; i <= 25; ++i) {
-      db.exec({
-        sql: 'INSERT INTO t(a,b) VALUES (?,?)',
-        bind: [i, i * 2],
-      });
-    }
-    log('Query data with exec()...');
-    db.exec({
-      sql: 'SELECT a FROM t ORDER BY a LIMIT 3',
-      callback: (row) => {
-        log(row);
-      },
-    });
-  } finally {
-    db.close();
-  }
-};
+const log = (...args) => postMessage({ type: "log", payload: args.join(" ") });
+const error = (...args) =>
+  postMessage({ type: "error", payload: args.join(" ") });
 
-log('Loading and initializing SQLite3 module...');
+let db;
+
+// Initialize the SQLite module and set up the database
 sqlite3InitModule({
   print: log,
   printErr: error,
-}).then((sqlite3) => {
-  log('Done initializing. Running demo...');
+})
+  .then((sqlite3) => {
+    log("Done initializing SQLite3 module");
+
+    if ("opfs" in sqlite3) {
+      db = new sqlite3.oo1.OpfsDb("/todos.sqlite3");
+      log("OPFS is available, created persisted database at", db.filename);
+    } else {
+      db = new sqlite3.oo1.DB("/todos.sqlite3", "ct");
+      log("OPFS is not available, created transient database", db.filename);
+    }
+
+    // Create todos table if it doesn't exist
+    try {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS todos (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          description TEXT NOT NULL
+        )
+      `);
+      log("Ensured todos table exists");
+    } catch (err) {
+      error("Error creating todos table:", err.message);
+    }
+
+    // Listen for messages from the main thread
+    addEventListener("message", (e) => {
+      const { type, payload } = e.data;
+      if (type === "add_todo") {
+        addTodo(payload.title, payload.description);
+      } else if (type === "get_todos") {
+        getTodos();
+      }
+    });
+  })
+  .catch((err) => {
+    error("Failed to initialize SQLite3 module:", err);
+  });
+
+// Function to add a new todo
+function addTodo(title, description) {
   try {
-    start(sqlite3);
+    const stmt = db.prepare(`
+      INSERT INTO todos (title, description)
+      VALUES (?, ?)
+    `);
+
+    // Bind parameters
+    stmt.bind([title, description]);
+
+    // Execute the statement
+    while (stmt.step()) {}
+
+    // Finalize the statement
+    stmt.finalize();
+
+    log(`Added todo: "${title}"`);
+
+    // Optionally, send updated todos
+    getTodos();
   } catch (err) {
-    error(err.name, err.message);
+    error("Error adding todo:", err.message);
   }
-});
+}
+
+// Function to retrieve all todos
+function getTodos() {
+  try {
+    const stmt = db.prepare(`
+      SELECT id, title, description FROM todos ORDER BY id ASC
+    `);
+    const todos = [];
+
+    while (stmt.step()) {
+      // Retrieve each column based on its index
+      const id = stmt.getInt(0); // id is INTEGER at index 0
+      const title = stmt.getString(1); // title is TEXT at index 1
+      const description = stmt.getString(2); // description is TEXT at index 2
+
+      // Debugging: Log the retrieved values
+      log(
+        `Retrieved Todo - ID: ${id}, Title: "${title}", Description: "${description}"`
+      );
+
+      // Push the todo object to the todos array
+      todos.push({
+        id,
+        title,
+        description,
+      });
+    }
+
+    stmt.finalize();
+    postMessage({ type: "todos", payload: todos });
+    log("Retrieved todos successfully.");
+  } catch (err) {
+    error("Error retrieving todos:", err.message);
+  }
+}
