@@ -18,7 +18,7 @@ import promiserFactory from "./jswasm/sqlite3-worker1-promiser.mjs";
     console.log("Promiser initialized successfully.");
 
     // Proceed to open the database
-    const openResult = await promiser("open", { filename: ":memory:" });
+    const openResult = await promiser("open", { filename: "my-database.db" });
     console.log("Database opened:", openResult);
 
     // Execute a simple query
