@@ -1,0 +1,85 @@
+# SQLite WASM in a Shared Web Worker
+
+## Vite Config for OPFS
+
+```js
+// vite.config.js
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  server: {
+    headers: {
+      "Cross-Origin-Opener-Policy": "same-origin",
+      "Cross-Origin-Embedder-Policy": "require-corp",
+    },
+  },
+  optimizeDeps: {
+    exclude: ["@sqlite.org/sqlite-wasm"],
+  },
+});
+```
+
+## Worker API vs Shared Worker API
+
+- comparing the two APIs in terms of what is minimal viable code to get something working
+
+### Worker API
+
+```js
+// main thread in a worker
+
+const worker = new Worker("worker.mjs", { type: "module" });
+
+worker.postMessage({ type: "init" });
+
+worker.onmessage = (e) => {
+  const { type, payload } = e.data;
+  if (type === "log") {
+    console.log(payload);
+  }
+};
+```
+
+```js
+// worker
+
+onmessage = (e) => {
+  const { type, payload } = e.data;
+  if (type === "init") {
+    postMessage({ type: "log", payload: "worker initialized" });
+  }
+};
+```
+
+### Shared Worker API
+
+```js
+// main thread using a shared worker
+
+const worker = new SharedWorker("worker.mjs", { type: "module" });
+
+worker.port.postMessage({ type: "init" });
+
+worker.port.onmessage = (e) => {
+  const { type, payload } = e.data;
+  if (type === "log") {
+    console.log(payload);
+  }
+};
+```
+
+```js
+// shared worker
+
+onconnect = (e) => {
+  const port = e.ports[0];
+
+  port.onmessage = (e) => {
+    const { type, payload } = e.data;
+    if (type === "log") {
+      console.log(payload);
+    }
+  };
+  port.postMessage({ type: "init" });
+};
+```

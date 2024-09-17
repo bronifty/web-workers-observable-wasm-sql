@@ -25,7 +25,7 @@ const workerError = (...args) => {
 };
 
 // Initialize Worker
-const worker = new Worker("/worker.js", { type: "module" });
+const worker = new Worker("/todos-worker-shared.mjs", { type: "module" });
 worker.onmessage = (e) => {
   const { type, payload } = e.data;
   if (type === "log") {
