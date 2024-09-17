@@ -1,5 +1,7 @@
 # SQLite WASM in a Shared Web Worker
 
+- currently the setup in "opfs-vite" is working with the todos app (opfs works), so just piling on that with a bunch of scripts testing things.
+
 ## Vite Config for OPFS
 
 ```js
@@ -29,10 +31,16 @@ export default defineConfig({
 // main thread in a worker
 
 const worker = new Worker("worker.mjs", { type: "module" });
+const log = console.log;
 
-worker.postMessage({ type: "init" });
+log("worker.postMessage hello world");
+worker.postMessage({
+  type: "hello",
+  payload: "world",
+});
 
 worker.onmessage = (e) => {
+  log("worker.onmessage", JSON.stringify(e.data, null, 2));
   const { type, payload } = e.data;
   if (type === "log") {
     console.log(payload);
@@ -42,11 +50,13 @@ worker.onmessage = (e) => {
 
 ```js
 // worker
-
-onmessage = (e) => {
+const log = console.log;
+self.onmessage = (e) => {
+  log("worker.onmessage");
   const { type, payload } = e.data;
   if (type === "init") {
-    postMessage({ type: "log", payload: "worker initialized" });
+    log("worker.postMessage type log payload worker initialized");
+    self.postMessage({ type: "log", payload: "worker initialized" });
   }
 };
 ```
