@@ -2,55 +2,58 @@
 
 import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
 
+const ports = [];
+let db;
+let isInitialized = false;
+let initPromise = null;
+
 const log = (...args) => postMessage({ type: "log", payload: args.join(" ") });
 const error = (...args) =>
   postMessage({ type: "error", payload: args.join(" ") });
 
-let db;
-
 // Initialize the SQLite module and set up the database
-sqlite3InitModule({
-  print: log,
-  printErr: error,
-})
-  .then((sqlite3) => {
-    log("Done initializing SQLite3 module");
+function initializeSQLite() {
+  if (initPromise) return initPromise; // Prevent multiple initializations
 
-    if ("opfs" in sqlite3) {
-      db = new sqlite3.oo1.OpfsDb("/todos.sqlite3");
-      log("OPFS is available, created persisted database at", db.filename);
-    } else {
-      db = new sqlite3.oo1.DB("/todos.sqlite3", "ct");
-      log("OPFS is not available, created transient database", db.filename);
-    }
-
-    // Create todos table if it doesn't exist
-    try {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS todos (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          title TEXT NOT NULL,
-          description TEXT NOT NULL
-        )
-      `);
-      log("Ensured todos table exists");
-    } catch (err) {
-      error("Error creating todos table:", err.message);
-    }
-
-    // Listen for messages from the main thread
-    addEventListener("message", (e) => {
-      const { type, payload } = e.data;
-      if (type === "add_todo") {
-        addTodo(payload.title, payload.description);
-      } else if (type === "get_todos") {
-        getTodos();
-      }
-    });
+  initPromise = sqlite3InitModule({
+    print: log,
+    printErr: error,
   })
-  .catch((err) => {
-    error("Failed to initialize SQLite3 module:", err);
-  });
+    .then((sqlite3) => {
+      log("Done initializing SQLite3 module");
+
+      if ("opfs" in sqlite3) {
+        db = new sqlite3.oo1.OpfsDb("/todos.sqlite3");
+        log("OPFS is available, created persisted database at", db.filename);
+      } else {
+        db = new sqlite3.oo1.DB("/todos.sqlite3", "ct");
+        log("OPFS is not available, created transient database", db.filename);
+      }
+
+      // Create todos table if it doesn't exist
+      try {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS todos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL
+          )
+        `);
+        log("Ensured todos table exists");
+      } catch (err) {
+        error("Error creating todos table:", err);
+      }
+
+      isInitialized = true;
+      // Optionally, send initial todos
+      getTodos(); // Ensure getTodos is called after db is initialized
+    })
+    .catch((err) => {
+      error("Failed to initialize SQLite3 module:", err);
+    });
+
+  return initPromise;
+}
 
 // Function to add a new todo
 function addTodo(title, description) {
@@ -112,3 +115,23 @@ function getTodos() {
     error("Error retrieving todos:", err.message);
   }
 }
+
+(function () {
+  self.onmessage = async (e) => {
+    const { type, payload } = e.data;
+
+    if (type === "add_todo") {
+      // Ensure SQLite is initialized before adding a todo
+      await initializeSQLite();
+      addTodo(payload.title, payload.description);
+    } else if (type === "get_todos") {
+      // Ensure SQLite is initialized before retrieving todos
+      await initializeSQLite();
+      getTodos();
+    }
+  };
+  // Initialize SQLite if not already done
+  initializeSQLite().then(() => {
+    self.postMessage({ type: "init" });
+  });
+})();
