@@ -1,6 +1,8 @@
-# SQLite WASM in a Shared Web Worker
+# SQLite WASM in a Web Worker
 
 - currently the setup in "opfs-vite" is working with the todos app (opfs works), so just piling on that with a bunch of scripts testing things.
+- opfs doesn't work in a SharedWorker; wa-sqlite demo has a workaround
+- rxdb opfs has something too
 
 ## Vite Config for OPFS
 
@@ -93,3 +95,8 @@ onconnect = (e) => {
   port.postMessage({ type: "init" });
 };
 ```
+
+## Notes
+
+[wa-sqlite opfs](https://github.com/rhashimoto/wa-sqlite/tree/master/demo/SharedService)
+[rxdb opfs](https://rxdb.info/rx-storage-opfs.html)
