@@ -2,9 +2,9 @@
 
 import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
 
-const ports = [];
+// const ports = [];
 let db;
-let isInitialized = false;
+// let isInitialized = false;
 let initPromise = null;
 
 const log = (...args) => postMessage({ type: "log", payload: args.join(" ") });
@@ -44,7 +44,7 @@ function initializeSQLite() {
         error("Error creating todos table:", err);
       }
 
-      isInitialized = true;
+      // isInitialized = true;
       // Optionally, send initial todos
       getTodos(); // Ensure getTodos is called after db is initialized
     })
