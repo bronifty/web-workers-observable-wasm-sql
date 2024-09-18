@@ -25,8 +25,10 @@ const workerError = (...args) => {
 };
 
 // Initialize Worker
-const worker = new Worker("/src/todos-worker.mjs", { type: "module" });
-worker.onmessage = (e) => {
+const worker = new SharedWorker("/src/shared-todos-worker.mjs", {
+  type: "module",
+});
+worker.port.onmessage = (e) => {
   const { type, payload } = e.data;
   if (type === "log") {
     workerLog(payload);
@@ -57,7 +59,7 @@ todoForm.addEventListener("submit", (e) => {
 
   if (title || description) {
     // Send add_todo message to worker
-    worker.postMessage({
+    worker.port.postMessage({
       type: "add_todo",
       payload: { title, description },
     });
@@ -66,9 +68,9 @@ todoForm.addEventListener("submit", (e) => {
     todoForm.reset();
 
     // Fetch updated todos
-    worker.postMessage({ type: "get_todos" });
+    worker.port.postMessage({ type: "get_todos" });
   }
 });
 
 // Initial Fetch of Todos
-worker.postMessage({ type: "get_todos" });
+worker.port.postMessage({ type: "get_todos" });
