@@ -64,11 +64,5 @@ todoForm.addEventListener("submit", (e) => {
 
     // Clear form fields
     todoForm.reset();
-
-    // Fetch updated todos
-    worker.postMessage({ type: "get_todos" });
   }
 });
-
-// Initial Fetch of Todos
-worker.postMessage({ type: "get_todos" });
