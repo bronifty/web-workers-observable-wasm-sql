@@ -1,11 +1,7 @@
-// web-workers-observable-wasm-sql/opfs-vite/worker.js
-
 import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
 
-// const ports = [];
-let db;
-// let isInitialized = false;
-let initPromise = null;
+let db; // our live object which, once initialized, will be used to serve requests from the ui thread
+let initPromise = null; // initializes the db as a singleton
 
 const log = (...args) => postMessage({ type: "log", payload: args.join(" ") });
 const error = (...args) =>
